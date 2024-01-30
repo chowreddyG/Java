@@ -1,0 +1,66 @@
+###  Note: Open Required Ports In AWS Security Groups. For now we will open All trafic.
+
+## COMMON FOR MASTER & SLAVES START
+
+# First, login as root user because the following set of commands need to be executed with 'sudo' permissions.
+
+sudo su -
+# Update Package Manager
+
+apt-get update -y
+
+# Install And Enable Docker
+
+apt install docker.io -y
+usermod -aG docker ubuntu
+systemctl restart docker
+systemctl enable docker.service
+
+#Turn Off Swap Space
+
+swapoff -a
+sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+# Install Required packages and apt keys.
+apt-get install -y apt-transport-https curl
+
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+cat <<EOF | tee /etc/apt/sources.list.d/kubernetes.list
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+
+apt-get update -y
+
+#Install kubeadm, Kubelet And Kubectl
+
+apt-get install -y kubelet kubeadm kubectl
+
+# Enable and start kubelet service
+systemctl daemon-reload
+systemctl start kubelet
+systemctl enable kubelet.service
+
+============================================================================================
+### Steps Only For Kubernetes Master
+sudo su -
+# Initialize Kubernates master by executing below commond.
+kubeadm init
+#exit as root user & exeucte as normal ubuntu user
+exit
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/. kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+# To verify, if kubectl is working or not, run the following command.
+kubectl get pods -o wide -n kube-system
+
+
+ cat /etc/kubernetes/admin.conf
+
+
+
+ kubeadm join 172.31.62.95:6443 --token dd8w7s.k7wgb8gpsbtxgb1w \
+        --discovery-token-ca-cert-hash sha256:41f34a9e3dacef045b76ccdf4e022f4cdf3a220e9e0b097ba21a2d5200fa7a9e
+
+
+ =======================================================================================================================
